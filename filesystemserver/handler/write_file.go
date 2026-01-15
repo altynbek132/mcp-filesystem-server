@@ -40,7 +40,67 @@ func (fs *FilesystemHandler) HandleWriteFile(
 		path = cwd
 	}
 
-	validPath, err := fs.validatePath(path)
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find nearest existing ancestor to validate access before creating directories.
+	// This is necessary because validatePath requires the immediate parent to exist.
+	// By finding the deepest existing ancestor and validating it, we ensure
+	// that we are allowed to create directories under it.
+	current := absPath
+	for {
+		parent := filepath.Dir(current)
+		if info, err := os.Stat(parent); err == nil {
+			if !info.IsDir() {
+				return &mcp.CallToolResult{
+					Content: []mcp.Content{
+						mcp.TextContent{
+							Type: "text",
+							Text: fmt.Sprintf("Error: %s exists but is not a directory", parent),
+						},
+					},
+					IsError: true,
+				}, nil
+			}
+			// Validate the existing parent directory
+			if _, err := fs.validatePath(parent); err != nil {
+				return &mcp.CallToolResult{
+					Content: []mcp.Content{
+						mcp.TextContent{
+							Type: "text",
+							Text: fmt.Sprintf("Error validating parent directory: %v", err),
+						},
+					},
+					IsError: true,
+				}, nil
+			}
+			break
+		}
+		if parent == current {
+			break
+		}
+		current = parent
+	}
+
+	// Create parent directories if they don't exist (mkdir -p behavior)
+	parentDir := filepath.Dir(absPath)
+	if err := os.MkdirAll(parentDir, 0755); err != nil {
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				mcp.TextContent{
+					Type: "text",
+					Text: fmt.Sprintf("Error creating parent directories: %v", err),
+				},
+			},
+			IsError: true,
+		}, nil
+	}
+
+	// Now validate the full path properly. Since we created the parents,
+	// validatePath will now be able to check the full path for allowed directories and symlinks.
+	validPath, err := fs.validatePath(absPath)
 	if err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -60,20 +120,6 @@ func (fs *FilesystemHandler) HandleWriteFile(
 				mcp.TextContent{
 					Type: "text",
 					Text: "Error: Cannot write to a directory",
-				},
-			},
-			IsError: true,
-		}, nil
-	}
-
-	// Create parent directories if they don't exist
-	parentDir := filepath.Dir(validPath)
-	if err := os.MkdirAll(parentDir, 0755); err != nil {
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				mcp.TextContent{
-					Type: "text",
-					Text: fmt.Sprintf("Error creating parent directories: %v", err),
 				},
 			},
 			IsError: true,
