@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/mark3labs/mcp-filesystem-server/filesystemserver"
+	"github.com/altynbek132/mcp-filesystem-server/filesystemserver"
 	"github.com/mark3labs/mcp-go/server"
 )
 

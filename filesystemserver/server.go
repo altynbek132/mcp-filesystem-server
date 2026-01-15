@@ -1,7 +1,7 @@
 package filesystemserver
 
 import (
-	"github.com/mark3labs/mcp-filesystem-server/filesystemserver/handler"
+	"github.com/altynbek132/mcp-filesystem-server/filesystemserver/handler"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
