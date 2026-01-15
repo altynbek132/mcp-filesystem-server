@@ -90,7 +90,7 @@ This MCP server provides secure access to the local filesystem via the Model Con
 #### Using Go Install
 
 ```bash
-go install github.com/altynbek132/mcp-filesystem-server@latest
+go install github.com/altynbek132/mcp-filesystem-server@main
 ```
 
 ### Usage
