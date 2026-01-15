@@ -40,7 +40,7 @@ func NewFilesystemServer(allowedDirs []string) (*server.MCPServer, error) {
 
 	s.AddTool(mcp.NewTool(
 		"write_file",
-		mcp.WithDescription("Create a new file or overwrite an existing file with new content."),
+		mcp.WithDescription("Create a new file or overwrite an existing file with new content. Automatically creates parent directories if they don't exist (like mkdir -p)."),
 		mcp.WithString("path",
 			mcp.Description("Path where to write the file"),
 			mcp.Required(),
